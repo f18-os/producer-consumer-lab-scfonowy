@@ -1,34 +1,34 @@
 import cv2
-from threading import Thread
-from threading import Semaphore, Lock
+from threading import Thread, Semaphore, Lock
 from random import shuffle
-from queue import Queue # note that python's queue class is synchronized but can be used without protections
 
+# producer/consumer queue class to make the rest of the lab a little nicer :)
+# the put/get algorithm is just the standard one on the web (this one from wikipedia!)
 class ProducerConsumerQueue():
     def __init__(self, size=10):
-        self.queue = Queue(maxsize=10)
-        self.insertSemaphore = Semaphore(value=0)
-        self.removeSemaphore = Semaphore(value=size)
+        self.queue = []
+        self.insertSemaphore = Semaphore(value=0) # semaphore used to handle insertions
+        self.removeSemaphore = Semaphore(value=size) # semaphore used to handle removals
         self.lock = Lock()
     
     def put(self, item):
         self.removeSemaphore.acquire()
         self.lock.acquire()
-        self.queue.put_nowait(item) # use nowait to avoid python's own synchronization implementation
+        self.queue.append(item)
         self.lock.release()
         self.insertSemaphore.release()
     
     def get(self):
         self.insertSemaphore.acquire()
         self.lock.acquire()
-        item = self.queue.get_nowait() # use nowait to avoid python's own synchronization implementation
+        item = self.queue.pop(0)
         self.lock.release()
         self.removeSemaphore.release()
 
         return item
     
     def empty(self):
-        return self.queue.empty()
+        return len(self.queue) == 0
 
 def extract_frames(outputBuffer, clip="clip.mp4"):
     global extractDone
@@ -109,7 +109,7 @@ convertDone = False
 # create threads, but don't start them
 extractThread = Thread(target=extract_frames, args=(colorFrameBuffer, ))
 convertThread = Thread(target=convert_frames, args=(colorFrameBuffer, grayscaleFrameBuffer, ))
-# displayThread = Thread(target=display_frames, args=(colorFrameBuffer, )) # needs to be on main thread in macOS
+# displayThread = Thread(target=display_frames, args=(colorFrameBuffer, ))
 
 # shuffle the threads randomly enough
 threads = [extractThread, convertThread]
@@ -118,4 +118,4 @@ shuffle(threads)
 # start the threads
 for thread in threads:
     thread.start()
-display_frames(grayscaleFrameBuffer)
+display_frames(grayscaleFrameBuffer) # needs to be on main thread in macOS
