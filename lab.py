@@ -1,3 +1,5 @@
+#! /usr/bin/env python3
+
 import cv2
 from threading import Thread, Semaphore, Lock
 from random import shuffle
@@ -42,14 +44,14 @@ def extract_frames(outputBuffer, clip="clip.mp4"):
     # read first image
     success,image = vidcap.read()
     
-    print("Extracting frame {}".format(count))
+    
     while success:
         # add the frame to the buffer
         outputBuffer.put(image)
+        print("Extracting frame {}".format(count))
        
         success,image = vidcap.read()
         count += 1
-        print('Extracting frame {}'.format(count))
 
     print("Frame extraction complete")
     extractDone = True
