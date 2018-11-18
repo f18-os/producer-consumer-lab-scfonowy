@@ -1,10 +1,6 @@
 import cv2
-import os
 from threading import Thread
 from threading import Semaphore, Lock
-import time
-import numpy as np
-import base64
 from random import shuffle
 from queue import Queue # note that python's queue class is synchronized but can be used without protections
 
