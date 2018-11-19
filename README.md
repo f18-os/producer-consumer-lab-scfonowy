@@ -1,48 +1,27 @@
-# Producer Consumer Lab
+# CS4375 - JSON RPC Lab
+--
+*by super anonymous student, last update November 18th, 2018*
+## Overview
+This lab implements a simple producer/consumer queue exercise. The lab takes the provided video clip (clip.mp4) and, using OpenCV, converts each frame to grayscale and displays the frames at about 24 frames per second. In one thread, frames are extracted from the clip one by one, placed into a buffer, from which another thread reads the frames and converts each one to grayscale. Each grayscale frame is then placed into another buffer, which is read from another thread to display the frames. Each buffer, by default, has a maximum size of 10. Additionally, the start order of the threads is shuffled upon running the lab.
 
-For this lab you will implement a trivial producer-consumer system using
-python threads where all coordination is managed by counting and binary
-semaphores for a system of two producers and two consumers. The producers and
-consumers will form a simple rendering pipeline using multiple threads. One
-thread will read frames from a file, a second thread will take those frames
-and convert them to grayscale, and the third thread will display those
-frames. The threads will run concurrently.
+Note that on macOS, OpenCV's `imshow` method only works on the main thread.
 
-## File List
-### ExtractFrames.py
-Extracts a series of frames from the video contained in 'clip.mp4' and saves 
-them as jpeg images in sequentially numbered files with the pattern
-'frame_xxxx.jpg'.
+A copy of the original assignment prompt is in ASSIGNMENT.md.
 
-### ConvertToGrayscale.py
-Loads a series for frams from sequentially numbered files with the pattern
-'frame_xxxx.jpg', converts the grames to grayscale, and saves them as jpeg
-images with the file names 'grayscale_xxxx.jpg'
+## Running Instructions
+To run the lab, simply download or clone the repository and run the server script using `python3`. For example:
 
-### DisplayFrames.py
-Loads a series of frames sequently from files with the names
-'grayscale_xxxx.jpg' and displays them with a 42ms delay.
+`python3 lab.py` or `./lab.py`
 
-### ExtractAndDisplay.py
-Loads a series of framss from a video contained in 'clip.mp4' and displays 
-them with a 42ms delay
+## Prerequisites
+In order to run this lab, it's necessary to have the Python 3 OpenCV bindings. These can be installed via pip with
 
-## Requirements
-* Extract frames from a video file, convert them to grayscale, and display
-them in sequence
-* You must have three functions
-  * One function to extract the frames
-  * One function to convert the frames to grayscale
-  * One function to display the frames at the original framerate (24fps)
-* The functions must each execute within their own python thread
-  * The threads will execute concurrently
-  * The order threads execute in may not be the same from run to run
-* Threads will need to signal that they have completed their task
-* Threads must process all frames of the video exactly once
-* Frames will be communicated between threads using producer/consumer idioms
-  * Producer/consumer quesues will be bounded at ten frames
+`pip install opencv-python`
 
-Note: You may have ancillary objects and method in order to make you're code easer to understand and implement.
+## References
+Much of the code for reading frames, converting to grayscale, and then displaying frames at 24 FPS was provided by the course team.
 
+I referenced this StackOverflow post for how to create Python threads without writing new classes. (https://stackoverflow.com/questions/2905965/creating-threads-in-python)
 
+I also referenced the Wikipedia page for Producer-Consumer. (https://en.wikipedia.org/wiki/Producer–consumer_problem)
 

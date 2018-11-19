@@ -21,13 +21,16 @@ class ProducerConsumerQueue():
         self.insertSemaphore.release()
     
     def get(self):
-        self.insertSemaphore.acquire()
-        self.lock.acquire()
-        item = self.queue.pop(0)
-        self.lock.release()
-        self.removeSemaphore.release()
+        if self.insertSemaphore.acquire(timeout=3): # extra safeguard
+            self.lock.acquire()
+            item = self.queue.pop(0)
+            self.lock.release()
+            self.removeSemaphore.release()
 
-        return item
+            return item
+        
+        else:
+            return None
     
     def empty(self):
         return len(self.queue) == 0
@@ -44,7 +47,6 @@ def extract_frames(outputBuffer, clip="clip.mp4"):
 
     # read first image
     success,image = vidcap.read()
-    
     
     while success:
         # add the frame to the buffer
@@ -66,13 +68,19 @@ def convert_frames(inputBuffer, outputBuffer):
         # get frame from buffer
         frame = inputBuffer.get()
 
-        # convert the image to grayscale
-        print('Converting frame {}'.format(count))
-        grayscaleFrame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        if not frame is None:
+            # convert the image to grayscale
+            print('Converting frame {}'.format(count))
+            # took this from the assignment, too! wow!!
+            grayscaleFrame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-        # add the frame to the buffer
-        outputBuffer.put(grayscaleFrame)
-        count += 1
+            # add the frame to the buffer
+            outputBuffer.put(grayscaleFrame)
+            count += 1
+        
+        else:
+            break
+    print ("Frame conversion complete")
     convertDone = True
     return
 
@@ -87,15 +95,18 @@ def display_frames(inputBuffer):
     while not (inputBuffer.empty() and convertDone):
         # get frame from buffer
         frame = inputBuffer.get()
-        print("Displaying frame {}".format(count))        
+        if not frame is None:
+            print("Displaying frame {}".format(count))        
 
-        # display the image in a window called "video" and wait 42ms
-        # before displaying the next frame
-        cv2.imshow("Video", frame)
-        if cv2.waitKey(42) and 0xFF == ord("q"):
+            # display the image in a window called "video" and wait 42ms
+            # before displaying the next frame
+            cv2.imshow("Video", frame)
+            if cv2.waitKey(42) and 0xFF == ord("q"):
+                break
+
+            count += 1
+        else:
             break
-
-        count += 1
 
     print("Finished displaying all frames")
     # cleanup the windows
@@ -108,6 +119,7 @@ colorFrameBuffer = ProducerConsumerQueue(size=10)
 grayscaleFrameBuffer = ProducerConsumerQueue(size=10)
 
 # signals for completion
+# originally i wanted to use a semaphore for checking but non-blocking semaphore checking is weird
 extractDone = False
 convertDone = False
 
