@@ -37,7 +37,6 @@ class ProducerConsumerQueue():
 
 def extract_frames(outputBuffer, clip="clip.mp4"):
     print("Extraction thread started...")
-    global extractDone
     ### CODE FROM ASSIGNMENT (SLIGHTLY MODIFIED)
     # Initialize frame count 
     count = 0
@@ -57,14 +56,13 @@ def extract_frames(outputBuffer, clip="clip.mp4"):
         count += 1
 
     print("Frame extraction complete")
-    extractDone = True
+    outputBuffer.put(None)
     return
 
 def convert_frames(inputBuffer, outputBuffer):
     print("Conversion thread started...")
-    global extractDone, convertDone
     count = 0
-    while not (inputBuffer.empty() and extractDone):
+    while True:
         # get frame from buffer
         frame = inputBuffer.get()
 
@@ -79,20 +77,19 @@ def convert_frames(inputBuffer, outputBuffer):
             count += 1
         
         else:
-            break
+            break # done
     print ("Frame conversion complete")
-    convertDone = True
+    outputBuffer.put(None)
     return
 
 def display_frames(inputBuffer):
     print("Display thread started...")
-    global convertDone
     ### CODE FROM ASSIGNMENT (SLIGHTLY MODIFIED)
     # initialize frame count
     count = 0
 
     # go through each frame in the buffer until the buffer is empty
-    while not (inputBuffer.empty() and convertDone):
+    while True:
         # get frame from buffer
         frame = inputBuffer.get()
         if not frame is None:
@@ -106,7 +103,7 @@ def display_frames(inputBuffer):
 
             count += 1
         else:
-            break
+            break # done
 
     print("Finished displaying all frames")
     # cleanup the windows
@@ -117,11 +114,6 @@ def display_frames(inputBuffer):
 # different frame buffers
 colorFrameBuffer = ProducerConsumerQueue(size=10)
 grayscaleFrameBuffer = ProducerConsumerQueue(size=10)
-
-# signals for completion
-# originally i wanted to use a semaphore for checking but non-blocking semaphore checking is weird
-extractDone = False
-convertDone = False
 
 # create threads, but don't start them
 extractThread = Thread(target=extract_frames, args=(colorFrameBuffer, ))
@@ -135,4 +127,4 @@ shuffle(threads)
 # start the threads
 for thread in threads:
     thread.start()
-# display_frames(grayscaleFrameBuffer) # needs to be on main thread in macOS
+#display_frames(grayscaleFrameBuffer) # needs to be on main thread in macOS
