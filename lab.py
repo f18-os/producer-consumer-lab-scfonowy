@@ -33,6 +33,7 @@ class ProducerConsumerQueue():
         return len(self.queue) == 0
 
 def extract_frames(outputBuffer, clip="clip.mp4"):
+    print("Extraction thread started...")
     global extractDone
     ### CODE FROM ASSIGNMENT (SLIGHTLY MODIFIED)
     # Initialize frame count 
@@ -58,6 +59,7 @@ def extract_frames(outputBuffer, clip="clip.mp4"):
     return
 
 def convert_frames(inputBuffer, outputBuffer):
+    print("Conversion thread started...")
     global extractDone, convertDone
     count = 0
     while not (inputBuffer.empty() and extractDone):
@@ -75,6 +77,7 @@ def convert_frames(inputBuffer, outputBuffer):
     return
 
 def display_frames(inputBuffer):
+    print("Display thread started...")
     global convertDone
     ### CODE FROM ASSIGNMENT (SLIGHTLY MODIFIED)
     # initialize frame count
@@ -111,13 +114,13 @@ convertDone = False
 # create threads, but don't start them
 extractThread = Thread(target=extract_frames, args=(colorFrameBuffer, ))
 convertThread = Thread(target=convert_frames, args=(colorFrameBuffer, grayscaleFrameBuffer, ))
-# displayThread = Thread(target=display_frames, args=(colorFrameBuffer, ))
+displayThread = Thread(target=display_frames, args=(grayscaleFrameBuffer, ))
 
 # shuffle the threads randomly enough
-threads = [extractThread, convertThread]
+threads = [extractThread, convertThread, displayThread]
 shuffle(threads)
 
 # start the threads
 for thread in threads:
     thread.start()
-display_frames(grayscaleFrameBuffer) # needs to be on main thread in macOS
+# display_frames(grayscaleFrameBuffer) # needs to be on main thread in macOS
