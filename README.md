@@ -1,4 +1,4 @@
-# CS4375 - JSON RPC Lab
+# CS4375 - Producer Consumer Lab
 --
 *by super anonymous student, last update November 18th, 2018*
 ## Overview
