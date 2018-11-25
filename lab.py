@@ -3,6 +3,7 @@
 import cv2
 from threading import Thread, Semaphore, Lock
 from random import shuffle
+import time
 
 # producer/consumer queue class to make the rest of the lab a little nicer :)
 # the put/get algorithm is just the standard one on the web (this one from wikipedia!)
@@ -62,22 +63,23 @@ def extract_frames(outputBuffer, clip="clip.mp4"):
 def convert_frames(inputBuffer, outputBuffer):
     print("Conversion thread started...")
     count = 0
-    while True:
+
+    # get initial frame
+    frame = inputBuffer.get()
+
+    while frame is not None:
+        # convert the image to grayscale
+        print('Converting frame {}'.format(count))
+        # took this from the assignment, too! wow!!
+        grayscaleFrame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+        # add the frame to the buffer
+        outputBuffer.put(grayscaleFrame)
+        count += 1
+
         # get frame from buffer
         frame = inputBuffer.get()
 
-        if not frame is None:
-            # convert the image to grayscale
-            print('Converting frame {}'.format(count))
-            # took this from the assignment, too! wow!!
-            grayscaleFrame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
-            # add the frame to the buffer
-            outputBuffer.put(grayscaleFrame)
-            count += 1
-        
-        else:
-            break # done
     print ("Frame conversion complete")
     outputBuffer.put(None)
     return
@@ -88,22 +90,35 @@ def display_frames(inputBuffer):
     # initialize frame count
     count = 0
 
+    # get initial frame
+    frame = inputBuffer.get()
+
+    # code used to approximate 24 fps from professor's email
+    # on course mailing list
+    frameInterval_s = 0.042         # inter-frame interval, in seconds
+
+    nextFrameStart = time.time()
+
     # go through each frame in the buffer until the buffer is empty
-    while True:
+    while frame is not None:
+
+        print("Displaying frame {}".format(count))        
+
+        # display the image in a window called "video" 
+        cv2.imshow("Video", frame)
+
+        # delay beginning of next frame display (sampled from email)
+        delay_s = nextFrameStart - time.time()
+        nextFrameStart += frameInterval_s
+        delay_ms = int(max(1, 1000 * delay_s))
+        print ("delay = %d ms" % delay_ms)
+        if cv2.waitKey(delay_ms) and 0xFF == ord("q"):
+            break
+
+        count += 1
+        
         # get frame from buffer
         frame = inputBuffer.get()
-        if not frame is None:
-            print("Displaying frame {}".format(count))        
-
-            # display the image in a window called "video" and wait 42ms
-            # before displaying the next frame
-            cv2.imshow("Video", frame)
-            if cv2.waitKey(42) and 0xFF == ord("q"):
-                break
-
-            count += 1
-        else:
-            break # done
 
     print("Finished displaying all frames")
     # cleanup the windows
